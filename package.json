@@ -1,0 +1,24 @@
+{
+  "name": "autochess-battler-card-game",
+  "version": "0.0.1",
+  "description": "MVP de juego de cartas autobattler/autochess guiado por especificaciones.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "typescript": "^5.4.5",
+    "vite": "^8.0.14",
+    "vitest": "^4.1.7"
+  }
+}
