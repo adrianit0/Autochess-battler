@@ -66,7 +66,78 @@ describe('game state', () => {
     };
     session = upgradeShop(session);
     expect(session.state.player.shopTier).toBe(2);
-    expect(session.state.player.gold).toBe(0);
+    expect(session.state.player.gold).toBe(1);
+  });
+
+  it('executes onPlay effects when moving a card to the board', () => {
+    const session = createNewGame('on-play-state');
+    const card = {
+      ...session.cardFactory.create(getCardDefinition('card_neutral_sellsword')),
+      temporaryEffects: [
+        {
+          id: 'effect_test_on_play_buff',
+          type: 'statBuff' as const,
+          trigger: 'onPlay' as const,
+          target: 'self' as const,
+          attack: 2,
+          health: 1,
+          permanent: true,
+          description: '[Jugar] Gana +2/+1.',
+        },
+      ],
+    };
+    const next = placeCardOnBoard(
+      {
+        ...session,
+        state: {
+          ...session.state,
+          player: {
+            ...session.state.player,
+            hand: [card],
+          },
+        },
+      },
+      card.instanceId,
+    );
+
+    expect(next.state.player.board[0].attack).toBe(card.attack + 2);
+    expect(next.state.player.board[0].health).toBe(card.health + 1);
+  });
+
+  it('executes onSell effects before granting sell gold', () => {
+    const session = createNewGame('on-sell-state');
+    const sold = {
+      ...session.cardFactory.create(getCardDefinition('card_neutral_sellsword')),
+      temporaryEffects: [
+        {
+          id: 'effect_test_on_sell_buff',
+          type: 'statBuff' as const,
+          trigger: 'onSell' as const,
+          target: 'randomAlly' as const,
+          attack: 2,
+          health: 0,
+          permanent: true,
+          description: '[Venta] Un aliado gana +2 ataque.',
+        },
+      ],
+    };
+    const ally = session.cardFactory.create(getCardDefinition('card_beast_rat'));
+    const next = sellCard({
+      ...session,
+      state: {
+        ...session.state,
+        player: {
+          ...session.state.player,
+          gold: 0,
+          board: [sold, ally],
+        },
+      },
+    }, sold.instanceId);
+
+    expect(next.state.player.gold).toBe(1);
+    expect(next.state.player.board).toHaveLength(1);
+    expect(next.state.player.board[0].instanceId).toBe(ally.instanceId);
+    expect(next.state.player.board[0].attack).toBe(ally.attack + 2);
   });
 
   it('resolves a loss and advances to the next round from reward phase', () => {

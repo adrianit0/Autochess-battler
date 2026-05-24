@@ -4,6 +4,24 @@ import { cardDefinitions } from './cards';
 import { enemyDefinitions } from './enemies';
 import { synergyDefinitions } from './synergies';
 
+const visibleTriggerLabels: Record<string, string> = {
+  onBuy: '[Compra]',
+  onSell: '[Venta]',
+  onPlay: '[Jugar]',
+  onDeath: '[Muerte]',
+  onCombatStart: '[Inicio Combate]',
+  onShopTurnEnd: '[Fin Tienda]',
+};
+
+const retiredMechanicNames = [
+  'Grito de compra',
+  'Venta',
+  'Jugar carta',
+  'Ultimo aliento',
+  'Inicio de combate',
+  'Fin de Tienda',
+];
+
 export interface GameDataSet {
   balance: BalanceConfig;
   cards: CardDefinition[];
@@ -123,6 +141,12 @@ function validateCards(cards: CardDefinition[]): string[] {
       errors.push(`Card ${card.id} is missing visible metadata.`);
     }
 
+    for (const retiredName of retiredMechanicNames) {
+      if (usesRetiredMechanicName(card.playerText, retiredName)) {
+        errors.push(`Card ${card.id} uses retired visible mechanic name: ${retiredName}.`);
+      }
+    }
+
     for (const effect of card.effects) {
       if (!effect.id.startsWith('effect_')) {
         errors.push(`Card ${card.id} has invalid effect id: ${effect.id}.`);
@@ -131,10 +155,23 @@ function validateCards(cards: CardDefinition[]): string[] {
       if (effect.type === 'summon' && !cards.some((candidate) => candidate.id === effect.cardId)) {
         errors.push(`Card ${card.id} summons unknown card ${effect.cardId}.`);
       }
+
+      const expectedLabel = visibleTriggerLabels[effect.trigger];
+      if (expectedLabel && !card.playerText.includes(expectedLabel)) {
+        errors.push(`Card ${card.id} with trigger ${effect.trigger} must include ${expectedLabel}.`);
+      }
     }
   }
 
   return errors;
+}
+
+function usesRetiredMechanicName(text: string, retiredName: string): boolean {
+  if (retiredName === 'Venta') {
+    return /(^|[^\[])Venta(?!\])/.test(text);
+  }
+
+  return text.includes(retiredName);
 }
 
 function validateEnemies(
@@ -211,6 +248,11 @@ function validateSynergies(synergies: SynergyDefinition[], cards: CardDefinition
 
     if (synergy.effect.type === 'summon' && !cardIds.has(synergy.effect.cardId)) {
       errors.push(`Synergy ${synergy.id} summons unknown card ${synergy.effect.cardId}.`);
+    }
+
+    const expectedLabel = visibleTriggerLabels[synergy.trigger];
+    if (expectedLabel && !synergy.playerText.includes(expectedLabel)) {
+      errors.push(`Synergy ${synergy.id} with trigger ${synergy.trigger} must include ${expectedLabel}.`);
     }
   }
 

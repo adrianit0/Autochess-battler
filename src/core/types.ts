@@ -16,6 +16,8 @@ export type CardZone = 'shop' | 'hand' | 'board' | 'combatBoard' | 'enemyBoard' 
 export type EffectTrigger =
   | 'passive'
   | 'onBuy'
+  | 'onSell'
+  | 'onPlay'
   | 'onDeath'
   | 'onCombatStart'
   | 'onShopTurnEnd'
@@ -114,6 +116,7 @@ export interface PlayerState {
   health: number;
   gold: number;
   shopTier: 1 | 2 | 3 | 4 | 5 | 6;
+  tavernUpgradeCosts?: Record<number, number>;
   hand: CardInstance[];
   board: CardInstance[];
 }

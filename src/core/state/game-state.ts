@@ -4,6 +4,7 @@ import { getEnemyForRound } from '../../data/enemies';
 import { createCardFactory, type CardFactory } from '../cards/card-factory';
 import { applyAutomaticFusions } from '../cards/fusion';
 import { simulateCombat } from '../combat/combat';
+import { executeEffect } from '../effects/effect-engine';
 import {
   discardRemainingGold,
   gainGoldFromSale,
@@ -27,7 +28,7 @@ import {
   setShopFrozen,
 } from '../shop/shop';
 import { applySynergies } from '../synergies/synergy-engine';
-import type { CardInstance, CombatEvent, CombatOutcome, GameState } from '../types';
+import type { CardInstance, CombatEvent, CombatOutcome, EffectTrigger, GameState, PlayerState } from '../types';
 
 export interface GameSession {
   state: GameState;
@@ -67,7 +68,8 @@ export function buyCard(session: GameSession, slotId: string): GameSession {
   const paid = payForBuyCard(session.state.player);
   const bought = buyFromShopSlot(session.state.shop, slotId);
   const playerWithCard = addCardToHand(paid.player, bought.card);
-  const fusion = applyAutomaticFusions(playerWithCard, getCardDefinition, session.cardFactory);
+  const triggered = applyCardTrigger(playerWithCard, bought.card, 'onBuy', session);
+  const fusion = applyAutomaticFusions(triggered.player, getCardDefinition, session.cardFactory);
 
   return updateSession(session, {
     player: fusion.player,
@@ -78,7 +80,8 @@ export function buyCard(session: GameSession, slotId: string): GameSession {
 export function sellCard(session: GameSession, instanceId: string): GameSession {
   assertPhase(session.state, 'ShopPhase');
   const removed = removeCardForSale(session.state.player, instanceId);
-  const economy = gainGoldFromSale(removed.player);
+  const triggered = applyCardTrigger(removed.player, removed.card, 'onSell', session);
+  const economy = gainGoldFromSale(triggered.player);
 
   return updateSession(session, {
     player: economy.player,
@@ -114,9 +117,11 @@ export function upgradeShop(session: GameSession): GameSession {
 
 export function placeCardOnBoard(session: GameSession, instanceId: string, boardIndex?: number): GameSession {
   assertPhase(session.state, 'ShopPhase');
+  const player = moveCardFromHandToBoard(session.state.player, instanceId, boardIndex);
+  const placedCard = player.board.find((card) => card.instanceId === instanceId);
 
   return updateSession(session, {
-    player: moveCardFromHandToBoard(session.state.player, instanceId, boardIndex),
+    player: placedCard ? applyCardTrigger(player, placedCard, 'onPlay', session).player : player,
   });
 }
 
@@ -142,8 +147,9 @@ export function resolveCurrentCombat(session: GameSession): GameSession {
   const enemyBoard = enemy.cards.map((entry) =>
     session.cardFactory.create(getCardDefinition(entry.cardId), { upgraded: entry.upgraded }),
   );
-  const playerAfterShop = discardRemainingGold(session.state.player);
-  const prepared = applyCombatStartSynergies(playerAfterShop.board, enemyBoard, session);
+  const shopEnded = applyShopTurnEndEffects(session.state.player, enemyBoard, session);
+  const playerAfterShop = discardRemainingGold(shopEnded.player);
+  const prepared = applyCombatStartSynergies(playerAfterShop.board, shopEnded.enemyBoard, session);
   const combat = simulateCombat({
     playerBoard: prepared.playerBoard,
     enemyBoard: prepared.enemyBoard,
@@ -164,7 +170,7 @@ export function resolveCurrentCombat(session: GameSession): GameSession {
     player: damagedPlayer,
     lastCombat: {
       ...combat,
-      events: [...prepared.events, ...combat.events],
+      events: [...shopEnded.events, ...prepared.events, ...combat.events],
     },
   });
 }
@@ -192,6 +198,93 @@ export function continueAfterCombat(session: GameSession): GameSession {
     shop,
     lastCombat: undefined,
   });
+}
+
+function applyShopTurnEndEffects(
+  player: PlayerState,
+  enemyBoard: CardInstance[],
+  session: GameSession,
+): { player: PlayerState; enemyBoard: CardInstance[]; events: CombatEvent[] } {
+  let nextPlayer = player;
+  let nextEnemyBoard = enemyBoard;
+  const events: CombatEvent[] = [];
+
+  for (const card of [...player.hand, ...player.board]) {
+    const result = applyCardTrigger(nextPlayer, card, 'onShopTurnEnd', session, nextEnemyBoard);
+    nextPlayer = result.player;
+    nextEnemyBoard = result.enemies;
+    events.push(...result.events);
+  }
+
+  const synergies = applySynergies({
+    allies: nextPlayer.board,
+    enemies: nextEnemyBoard,
+    rng: session.rng,
+    trigger: 'onShopTurnEnd',
+    resolveDefinition: getCardDefinition,
+    createCard: (cardId) => session.cardFactory.create(getCardDefinition(cardId)),
+  });
+
+  return {
+    player: {
+      ...nextPlayer,
+      board: synergies.allies,
+    },
+    enemyBoard: synergies.enemies,
+    events: [...events, ...synergies.events],
+  };
+}
+
+function applyCardTrigger(
+  player: PlayerState,
+  source: CardInstance,
+  trigger: EffectTrigger,
+  session: GameSession,
+  enemies: CardInstance[] = [],
+): { player: PlayerState; enemies: CardInstance[]; events: CombatEvent[] } {
+  let allies = [...player.hand, ...player.board];
+  let nextEnemies = enemies;
+  const events: CombatEvent[] = [];
+  const definition = getCardDefinition(source.definitionId);
+  const effects = [...definition.effects, ...source.temporaryEffects].filter((effect) => effect.trigger === trigger);
+
+  for (const effect of effects) {
+    const liveSource = allies.find((card) => card.instanceId === source.instanceId) ?? source;
+    const result = executeEffect(effect, {
+      source: liveSource,
+      allies,
+      enemies: nextEnemies,
+      rng: session.rng,
+      createCard: (cardId) => session.cardFactory.create(getCardDefinition(cardId)),
+    });
+
+    allies = result.allies;
+    nextEnemies = result.enemies;
+    events.push(...result.events);
+  }
+
+  const handIds = new Set(player.hand.map((card) => card.instanceId));
+  const boardIds = new Set(player.board.map((card) => card.instanceId));
+  const byId = new Map(allies.map((card) => [card.instanceId, card]));
+  const hand = player.hand.flatMap((card) => {
+    const updated = byId.get(card.instanceId);
+    return updated ? [updated] : [];
+  });
+  const board = player.board.flatMap((card) => {
+    const updated = byId.get(card.instanceId);
+    return updated ? [updated] : [];
+  });
+  const summoned = allies.filter((card) => !handIds.has(card.instanceId) && !boardIds.has(card.instanceId));
+
+  return {
+    player: {
+      ...player,
+      hand,
+      board: [...board, ...summoned].slice(0, balanceConfig.shop.boardLimit),
+    },
+    enemies: nextEnemies,
+    events,
+  };
 }
 
 function applyCombatStartSynergies(

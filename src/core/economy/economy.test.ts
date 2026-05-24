@@ -1,12 +1,15 @@
 import type { PlayerState } from '../types';
 import {
   canAfford,
+  createInitialTavernUpgradeCosts,
   discardRemainingGold,
   gainGoldFromSale,
   getActionCost,
+  getCurrentTavernUpgradeCost,
   payForBuyCard,
   payForRefresh,
   payForTavernUpgrade,
+  reduceTavernUpgradeCosts,
   setGoldForRound,
 } from './economy';
 
@@ -59,6 +62,34 @@ describe('economy', () => {
 
     expect(() => getActionCost('upgradeShop', player)).toThrow('Shop is already at max tier');
     expect(() => payForTavernUpgrade(player)).toThrow('Shop is already at max tier');
+  });
+
+  it('reduces tavern upgrade costs by one each shop turn down to zero', () => {
+    const initialCosts = createInitialTavernUpgradeCosts();
+    const reducedOnce = reduceTavernUpgradeCosts(initialCosts);
+    const reducedMany = Array.from({ length: 12 }).reduce<Record<number, number>>(
+      (costs) => reduceTavernUpgradeCosts(costs),
+      initialCosts,
+    );
+
+    expect(reducedOnce[1]).toBe(4);
+    expect(reducedOnce[2]).toBe(6);
+    expect(reducedMany[1]).toBe(0);
+    expect(reducedMany[5]).toBe(0);
+  });
+
+  it('uses the reduced tavern upgrade cost when paying', () => {
+    const player = makePlayer({
+      gold: 5,
+      shopTier: 1,
+      tavernUpgradeCosts: reduceTavernUpgradeCosts(createInitialTavernUpgradeCosts()),
+    });
+    const result = payForTavernUpgrade(player);
+
+    expect(getCurrentTavernUpgradeCost(player)).toBe(4);
+    expect(result.paid).toBe(4);
+    expect(result.player.gold).toBe(1);
+    expect(result.player.shopTier).toBe(2);
   });
 });
 

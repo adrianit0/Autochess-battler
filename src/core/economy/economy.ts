@@ -16,6 +16,7 @@ export function setGoldForRound(
   return {
     ...player,
     gold: getGoldForRound(round, config),
+    tavernUpgradeCosts: reduceTavernUpgradeCosts(player.tavernUpgradeCosts, config),
   };
 }
 
@@ -69,7 +70,7 @@ export function payForTavernUpgrade(
   player: PlayerState,
   config: BalanceConfig = balanceConfig,
 ): EconomyResult {
-  const cost = getTavernUpgradeCost(player.shopTier, config);
+  const cost = getCurrentTavernUpgradeCost(player, config);
 
   if (cost === null) {
     throw new Error('Shop is already at max tier');
@@ -99,13 +100,42 @@ export function getActionCost(
     case 'freeze':
       return config.economy.freezeCost;
     case 'upgradeShop': {
-      const cost = getTavernUpgradeCost(player.shopTier, config);
-      if (cost === null) {
-        throw new Error('Shop is already at max tier');
-      }
-      return cost;
+      return getCurrentTavernUpgradeCost(player, config);
     }
   }
+}
+
+export function createInitialTavernUpgradeCosts(config: BalanceConfig = balanceConfig): Record<number, number> {
+  return Object.fromEntries(
+    Object.entries(config.economy.tavernUpgradeCosts).map(([tier, cost]) => [Number(tier), cost]),
+  );
+}
+
+export function reduceTavernUpgradeCosts(
+  costs: Record<number, number> = createInitialTavernUpgradeCosts(),
+  config: BalanceConfig = balanceConfig,
+): Record<number, number> {
+  const nextCosts = createInitialTavernUpgradeCosts(config);
+
+  for (const tier of Object.keys(nextCosts)) {
+    const numericTier = Number(tier);
+    nextCosts[numericTier] = Math.max(0, (costs[numericTier] ?? nextCosts[numericTier]) - 1);
+  }
+
+  return nextCosts;
+}
+
+export function getCurrentTavernUpgradeCost(
+  player: PlayerState,
+  config: BalanceConfig = balanceConfig,
+): number {
+  const baseCost = getTavernUpgradeCost(player.shopTier, config);
+
+  if (baseCost === null) {
+    throw new Error('Shop is already at max tier');
+  }
+
+  return player.tavernUpgradeCosts?.[player.shopTier] ?? baseCost;
 }
 
 function spendGold(player: PlayerState, cost: number): EconomyResult {

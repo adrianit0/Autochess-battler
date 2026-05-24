@@ -209,7 +209,7 @@ Nota de verificacion: en PowerShell puede ser necesario usar `npm.cmd` en vez de
 
 ## T-021 - Renombrar mecanicas visibles de cartas
 
-- Estado: `pending`
+- Estado: `done`
 - Objetivo: sustituir nombres antiguos de mecanicas por etiquetas visibles entre corchetes.
 - Archivos afectados: `src/core/types.ts`, `src/data/cards.ts`, `src/data/synergies.ts`, `src/data/validate-data.ts`, `src/presentation/scenes/GameScene.ts`, tests afectados.
 - Descripcion: mantener triggers internos tipados, anadir si falta soporte para `onSell` y `onPlay`, y mostrar textos de carta con las etiquetas `[Compra]`, `[Venta]`, `[Jugar]`, `[Muerte]`, `[Inicio Combate]` y `[Fin Tienda]`.
@@ -219,7 +219,7 @@ Nota de verificacion: en PowerShell puede ser necesario usar `npm.cmd` en vez de
 
 ## T-022 - Redisenar cartas visuales con formato cuadrado
 
-- Estado: `pending`
+- Estado: `done`
 - Objetivo: hacer que todas las cartas visibles tengan tamano fijo, formato cuadrado, bordes suavizados y layout textual uniforme.
 - Archivos afectados: `src/presentation/scenes/GameScene.ts`, `src/presentation/ui/*`, estilos o helpers de renderizado de cartas.
 - Descripcion: crear o ajustar componente visual de carta para mostrar exactamente `[${Tier}]`, nombre, descripcion, ataque y vida en lineas separadas. Mantener el fondo base actual, mostrar fusiones de 3 cartas con fondo dorado y aplicar borde grueso por tipo.
@@ -229,7 +229,7 @@ Nota de verificacion: en PowerShell puede ser necesario usar `npm.cmd` en vez de
 
 ## T-023 - Sustituir posiciones de Mano por Tablero
 
-- Estado: `pending`
+- Estado: `done`
 - Objetivo: reemplazar la pagina o layout de posiciones de Mano por posiciones de Tablero.
 - Archivos afectados: `src/presentation/scenes/GameScene.ts`, `src/presentation/ui/*`, constantes de layout.
 - Descripcion: retirar la dependencia visual de posiciones de mano como vista principal de colocacion y usar posiciones de tablero para las cartas activas. La mano debe seguir existiendo como zona, pero la colocacion y orden relevante deben comunicarse desde el tablero.
@@ -239,7 +239,7 @@ Nota de verificacion: en PowerShell puede ser necesario usar `npm.cmd` en vez de
 
 ## T-024 - Implementar drag and drop entre tienda, mano y tablero
 
-- Estado: `pending`
+- Estado: `done`
 - Objetivo: sustituir interacciones por click con arrastre de cartas.
 - Archivos afectados: `src/presentation/scenes/GameScene.ts`, `src/presentation/input/*`, `src/presentation/ui/*`, tests afectados.
 - Descripcion: permitir comprar arrastrando de tienda a mano, colocar arrastrando de mano a tablero, vender arrastrando de tablero a tienda y mover cartas dentro del tablero para recolocarlas donde quiera el jugador.
@@ -249,7 +249,7 @@ Nota de verificacion: en PowerShell puede ser necesario usar `npm.cmd` en vez de
 
 ## T-025 - Reorganizar controles e informacion de tienda
 
-- Estado: `pending`
+- Estado: `done`
 - Objetivo: ajustar HUD y controles de tienda segun el nuevo layout.
 - Archivos afectados: `src/presentation/scenes/GameScene.ts`, `src/presentation/ui/*`, estilos o constantes de layout.
 - Descripcion: mostrar fase grande arriba al centro con nombre legible, ronda debajo, vida abajo a la izquierda con corazon y vida actual/total, oro abajo a la derecha con numero y hasta 10 monedas amarillas o grises, tier de tienda abajo al centro, y botones Refrescar, Congelar, Subir Tienda y Finalizar mas delgados y alineados horizontalmente arriba a la derecha de la tienda.
@@ -259,7 +259,7 @@ Nota de verificacion: en PowerShell puede ser necesario usar `npm.cmd` en vez de
 
 ## T-026 - Aplicar reduccion del coste de subir tienda por turno
 
-- Estado: `pending`
+- Estado: `done`
 - Objetivo: reducir en 1 oro el coste de subir tienda en cada turno.
 - Archivos afectados: `src/data/balance.ts`, `src/core/economy/economy.ts`, `src/core/state/game-state.ts`, tests afectados.
 - Descripcion: almacenar el coste restante de subida por nivel o calcularlo desde turnos transcurridos, aplicar reduccion al comenzar cada fase de tienda y mostrar el valor actualizado en UI.
@@ -269,7 +269,7 @@ Nota de verificacion: en PowerShell puede ser necesario usar `npm.cmd` en vez de
 
 ## T-027 - Mostrar congelacion de tienda sobre las cartas
 
-- Estado: `pending`
+- Estado: `done`
 - Objetivo: indicar visualmente que una tienda esta congelada cambiando el fondo de sus cartas.
 - Archivos afectados: `src/presentation/scenes/GameScene.ts`, `src/presentation/ui/*`, estilos o helpers de renderizado de cartas.
 - Descripcion: cuando la tienda esta congelada, las cartas de tienda usan fondo azulado claro. Si una carta de tienda congelada tambien es dorada, usar una lectura azul-dorada que conserve ambas senales.
@@ -279,7 +279,7 @@ Nota de verificacion: en PowerShell puede ser necesario usar `npm.cmd` en vez de
 
 ## T-028 - Mover tabla de informacion de combate fuera del area de juego
 
-- Estado: `pending`
+- Estado: `done`
 - Objetivo: colocar la informacion de combate a la derecha del juego para no restar espacio a tienda ni tablero.
 - Archivos afectados: `src/presentation/scenes/GameScene.ts`, `src/presentation/ui/*`, constantes de layout.
 - Descripcion: separar la tabla o panel de informacion de combate del area principal de juego y anclarlo a la derecha en un layout que no reduzca el espacio de tienda, mano ni tablero.

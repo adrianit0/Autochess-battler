@@ -43,7 +43,7 @@ Subida de tienda:
 | 4 | 9 |
 | 5 | 10 |
 
-El coste pendiente de subida baja 1 oro al inicio de cada turno de tienda hasta un minimo de 0. Esta reduccion se aplica al nivel actual de tienda y debe verse reflejada en el coste mostrado por la UI.
+El coste pendiente de subida baja 1 oro al inicio de cada turno de tienda hasta un minimo de 0. La reduccion se conserva por tramo de subida y debe verse reflejada en el coste mostrado por la UI.
 
 Vida y dano:
 
@@ -84,7 +84,7 @@ Referencia de stats base por nivel:
   - No se ajustan costes ni estadisticas todavia porque falta playtesting manual de UI.
   - Riesgo observado: las primeras rondas pueden castigar mucho si el jugador no compra/coloca cartas; se mantiene para preservar una condicion clara de derrota en MVP.
   - Siguiente revision recomendada: despues de jugar al menos 10 partidas manuales completas desde la UI.
-- 2026-05-23: se define como objetivo futuro que el coste de subir tienda se reduzca en 1 oro por turno de tienda y que la UI muestre siempre el coste actual.
+- 2026-05-23: se implementa la reduccion de coste de subir tienda en 1 oro por turno de tienda, con coste restante por tramo y coste actual visible en UI.
 
 ## Checklist de Revision MVP
 

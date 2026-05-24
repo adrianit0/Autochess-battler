@@ -16,7 +16,7 @@ export const synergyDefinitions: SynergyDefinition[] = [
       permanent: false,
       description: 'Una Bestia aliada aleatoria gana +2 ataque este combate.',
     },
-    playerText: '3 Bestias: al inicio del combate, un aliado gana +2 ataque.',
+    playerText: '3 Bestias: [Inicio Combate] un aliado gana +2 ataque.',
   },
   {
     id: 'synergy_mechs',
@@ -33,7 +33,7 @@ export const synergyDefinitions: SynergyDefinition[] = [
       permanent: false,
       description: 'La Maquina aliada con menos vida gana +0/+3 este combate.',
     },
-    playerText: '3 Maquinas: al inicio del combate, el aliado con menos vida gana +0/+3.',
+    playerText: '3 Maquinas: [Inicio Combate] el aliado con menos vida gana +0/+3.',
   },
   {
     id: 'synergy_arcanes',
@@ -48,7 +48,7 @@ export const synergyDefinitions: SynergyDefinition[] = [
       damage: 2,
       description: 'Inflige 2 de dano a un enemigo aleatorio.',
     },
-    playerText: '3 Arcanos: al inicio del combate, inflige 2 de dano aleatorio.',
+    playerText: '3 Arcanos: [Inicio Combate] inflige 2 de dano aleatorio.',
   },
   {
     id: 'synergy_undead',
@@ -63,7 +63,7 @@ export const synergyDefinitions: SynergyDefinition[] = [
       cardId: 'card_token_skeleton',
       description: 'Invoca un Esqueleto 1/1.',
     },
-    playerText: '3 No-muertos: cuando se active la sinergia de muerte, invoca un Esqueleto 1/1.',
+    playerText: '3 No-muertos: [Muerte] invoca un Esqueleto 1/1.',
   },
   {
     id: 'synergy_elementals',
@@ -80,6 +80,6 @@ export const synergyDefinitions: SynergyDefinition[] = [
       permanent: true,
       description: 'Un Elemental aliado aleatorio gana +1/+1 permanente.',
     },
-    playerText: '3 Elementales: al final de tienda, un aliado gana +1/+1.',
+    playerText: '3 Elementales: [Fin Tienda] un aliado gana +1/+1.',
   },
 ];
